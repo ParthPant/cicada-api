@@ -13,6 +13,7 @@ class Question(models.Model):
         )
 
     question_text = models.TextField()
+    image = models.ImageField(verbose_name='question image', blank=True, null=True)
     difficulty = models.IntegerField(default=1, choices=DIFFICULTY)
     correct_answer = models.CharField('correct answer', default='answer', max_length=255, blank=False, null=False)
 

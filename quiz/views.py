@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from .serializers import QuestionSerializer, QuizSerializer, InstanceSerializer
 from .models import Question, Quiz, QuizInstance, UserResponse
 from users.models import CustomUser
+import base64
 
 # Create your views here.
 
@@ -47,7 +48,20 @@ class QuizView(APIView):
         question = quiz.questions.all()[num_q-1]
 
         serialiser = QuestionSerializer(question)
-        return Response(serialiser.data)
+        resp = {}
+        resp['image'] = ''
+
+        try:
+            image_loc = question.image.path
+            with open(image_loc, "rb") as image_file:
+                image_data = base64.b64encode(image_file.read()).decode('utf-8')
+
+            resp = {'image': image_data}
+            resp.update(serialiser.data)
+            return Response(resp)
+        except Exception as e:
+            resp.update(serialiser.data)
+            return Response(resp)
 
     def post(self, request, quiz_id, **kwargs):
         '''
@@ -66,7 +80,10 @@ class QuizView(APIView):
         
         curr_question_num = instance[0].curr_question
         print(curr_question_num)
-        curr_question = quiz.questions.all()[curr_question_num-1]
+        try:
+            curr_question = quiz.questions.all()[curr_question_num-1]
+        except:
+            return Response('Already completed quiz')
 
         if answer == curr_question.correct_answer:
             deltascore = curr_question.difficulty * 10
